@@ -101,6 +101,11 @@
         border-color: #dc3545;
       }
 
+      .digit-box.pending {
+        background-color: #fff3cd;
+        border-color: #ffc107;
+      }
+
       .rules {
         background: #f8f9fa;
         border-radius: 10px;
@@ -654,23 +659,113 @@
           }
         })
 
-        // Update input styling
-        inputs.forEach((input) => {
-          input.classList.remove("valid", "invalid")
+        // Update input styling based on rules
+        inputs.forEach((input, index) => {
+          input.classList.remove("valid", "invalid", "pending")
         })
 
-        if (rule1) {
-          inputs.forEach((input) => {
-            input.classList.add("valid")
+        // Track which positions are involved in violations or pending rules
+        const violatedPositions = new Set()
+        const pendingPositions = new Set()
+
+        // Rule 1 check - highlight duplicates or invalid digits
+        if (!rule1 && filledDigits.length === 10) {
+          inputs.forEach((input, index) => {
+            if (digits[index] !== null) {
+              // Check if this digit is duplicated
+              const count = digits.filter((d) => d === digits[index]).length
+              if (count > 1) {
+                violatedPositions.add(index)
+              }
+            }
           })
-        } else if (filledDigits.length === 10) {
-          inputs.forEach((input) => {
+        }
+
+        // Rule 2: Positions 1, 4, 5, 7 (indices 1, 4, 5, 7)
+        if (rule2 === false) {
+          ;[1, 4, 5, 7].forEach((pos) => violatedPositions.add(pos))
+        } else if (rule2 === null && sum2568.some((d) => d !== null)) {
+          ;[1, 4, 5, 7].forEach((pos) => {
+            if (digits[pos] !== null) pendingPositions.add(pos)
+          })
+        }
+
+        // Rule 3: Position 3 (index 3)
+        if (rule3 === false) {
+          violatedPositions.add(3)
+        } else if (rule3 === null && digits[3] === null) {
+          pendingPositions.add(3)
+        }
+
+        // Rule 4: Position 2 (index 2)
+        if (rule4 === false) {
+          violatedPositions.add(2)
+        } else if (rule4 === null && digits[2] === null) {
+          pendingPositions.add(2)
+        }
+
+        // Rule 5: Positions 3 and 6 (indices 3, 6)
+        if (rule5 === false) {
+          ;[3, 6].forEach((pos) => violatedPositions.add(pos))
+        } else if (rule5 === null && (digits[3] !== null || digits[6] !== null)) {
+          ;[3, 6].forEach((pos) => {
+            if (digits[pos] !== null) pendingPositions.add(pos)
+          })
+        }
+
+        // Rule 6: Positions 1 and 9 (indices 1, 9)
+        if (rule6 === false) {
+          ;[1, 9].forEach((pos) => violatedPositions.add(pos))
+        } else if (rule6 === null && (digits[1] !== null || digits[9] !== null)) {
+          ;[1, 9].forEach((pos) => {
+            if (digits[pos] !== null) pendingPositions.add(pos)
+          })
+        }
+
+        // Rule 7: Positions 3, 5, 1, 9 (indices 3, 5, 1, 9)
+        if (rule7 === false) {
+          ;[3, 5, 1, 9].forEach((pos) => violatedPositions.add(pos))
+        } else if (
+          rule7 === null &&
+          [digits[3], digits[5], digits[1], digits[9]].some((d) => d !== null)
+        ) {
+          ;[3, 5, 1, 9].forEach((pos) => {
+            if (digits[pos] !== null) pendingPositions.add(pos)
+          })
+        }
+
+        // Rule 8: All positions when filled
+        if (rule8 === false) {
+          const pos5 = digits.indexOf(5)
+          const pos6 = digits.indexOf(6)
+          const pos4 = digits.indexOf(4)
+          if (pos5 !== -1) violatedPositions.add(pos5)
+          if (pos6 !== -1) violatedPositions.add(pos6)
+          if (pos4 !== -1) violatedPositions.add(pos4)
+        }
+
+        // Apply styling
+        inputs.forEach((input, index) => {
+          if (violatedPositions.has(index)) {
             input.classList.add("invalid")
+          } else if (pendingPositions.has(index)) {
+            input.classList.add("pending")
+          } else if (digits[index] !== null && rules.every((r) => r === true || r === null)) {
+            // If no violations and digit is filled
+            input.classList.add("valid")
+          }
+        })
+
+        // If all rules satisfied, mark all as valid
+        const allSatisfied = rules.every((r) => r === true)
+        if (allSatisfied) {
+          inputs.forEach((input) => {
+            input.classList.remove("invalid", "pending")
+            input.classList.add("valid")
           })
         }
 
         // Check if puzzle is solved
-        const allSatisfied = rules.every((r) => r === true)
         const successMessage = document.getElementById("successMessage")
 
         if (allSatisfied) {
